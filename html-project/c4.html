@@ -153,10 +153,12 @@ function switchTurns() {
 			whosTurn = BlkNum;
 			whosTurnSpot.src = bluSpot.src;
 			whosTurnPiece.src = bluPiece.src;
+			document.formo.texter.value = blkplayer + "'s turn.";
 		} else {
 			whosTurn = RedNum;
 			whosTurnSpot.src = redSpot.src;
 			whosTurnPiece.src = redPiece.src;
+			document.formo.texter.value = redplayer+ "'s turn.";
 		}
 	
 		
@@ -182,10 +184,12 @@ function AutoStart() {
 		whosTurn = BlkNum;
 		switchTurns();
 		whosFirst = RedNum;
-	} else {
+		document.formo.texter.value = redplayer+ "'s turn.";
+		} else {
 		whosTurn = RedNum;
 		switchTurns();
 		whosFirst = BlkNum;
+		document.formo.texter.value = blkplayer + "'s turn.";
 	}
 
 }
@@ -353,6 +357,8 @@ function drawnextframe() {
 												<tr> 
 						  							<td colspan="2" align="center"> 
 														<input type="button" name="reStartButton" value="Reset Board" onClick="newGame()" class="blacktext" />
+														<form name="formo" id="formo"><input type="text" name="texter" class="blacktext" /></form>
+
 						  </td>
 												</tr>
 												<tr> 
