@@ -1,0 +1,437 @@
+
+<!doctype html>
+<html>
+<head>
+
+<style type="text/css">
+	img {border: 0}
+	.bluetext {font-size: 14px; font-family: "Comic Sans MS", Verdana; color: blue; font-weight: bold}
+	.redtext {font-size: 14px; font-family: "Comic Sans MS", Verdana; color: red; font-weight: bold}
+.blacktext { font-size: 14px; font-family: "Calibri", Verdana; color: #000000; font-weight: bold }
+</style>
+<script language="JavaScript" type="text/javascript">
+
+var FIRSTIMAGE = 0;
+var ROWS = 6;
+var COLS = 7;
+var WINVAL = 100000;
+var theAnim = new Animation();
+var moves = 0;
+var gameActive = 0;
+var isdropping = 0;
+var RedNum=1;
+var BlkNum=2;
+var debugstr;
+var whosFirst;
+var matchMade = 0;
+var lookForSrc;
+var redScore = 0;
+var bluScore = 0;
+var colcount = new Array(COLS);
+var redplayer="Red";
+var	blkplayer="Yellow";
+var redtype="Human";
+var	blktype="Computer";
+
+var board = new Array(ROWS);
+for (var row = 0; row < ROWS; row++) {
+	board[row] = new Array(COLS);
+	for (var col=0; col < COLS; col++) {
+		board[row][col] = 0;
+	}
+}
+
+var linecount = 0; 
+var linecoords = new Array(70);
+
+
+function rePlay() {
+	if (gameActive == 1) {
+	    clearBoard();
+	}
+	for (var col=0; col < COLS; col++) {
+		colcount[col] = 0;
+	}
+	for (var row=0; row < ROWS; row++) {
+		for (var col=0; col < COLS; col++) {
+			board[row][col] = 0;
+		}
+	}
+   	moves = 0;
+   	isdropping = 0;
+
+}
+
+var redSpot = new Image();
+var bluSpot = new Image();
+var emptySpot = new Image();
+var emptyPiece = new Image();
+var illegal = new Image();
+var redPiece = new Image();
+var bluPiece = new Image();
+
+redSpot.src = "images/red_fill.gif";
+bluSpot.src = "images/yellow_coin.gif";
+emptySpot.src = "images/empty.gif";
+emptyPiece.src = "images/clear.gif";
+illegal.src = "images/illegal.gif"
+redPiece.src = "images/red_coin.gif";
+bluPiece.src = "images/yellow_fill.gif";
+var whosTurn = RedNum;
+var whosTurnSpot = new Image();
+var whosTurnPiece = new Image();
+whosTurnSpot.src = redSpot.src;
+whosTurnPiece.src = redPiece.src ;
+
+function clearBoard() {
+	for (var a = 7; a <= 48; a++) {
+		document.images[FIRSTIMAGE+a].src = emptySpot.src;
+	}
+}
+
+function placeTop(picToPlace) {
+	if	(colcount[picToPlace] == 6){
+		document.images[FIRSTIMAGE + picToPlace].src = illegal.src;	
+	}
+	else if (gameActive == 1) {
+		document.images[FIRSTIMAGE + picToPlace].src = whosTurnPiece.src;
+	}
+}
+
+function unPlaceTop(picToUnplace) {
+	if (gameActive == 1) {
+		document.images[FIRSTIMAGE + picToUnplace].src = emptyPiece.src;
+	}
+}
+
+
+function dropIt(whichCol) {
+	if (gameActive == 1) {
+		if (isdropping == 0) {
+		
+			isdropping = 1;
+			
+		    var placeLoc = FIRSTIMAGE + (ROWS - colcount[whichCol]) * COLS + whichCol;
+		    if (colcount[whichCol] < 6) {
+	
+				theAnim.addFrame( FIRSTIMAGE + whichCol, emptyPiece.src);
+		        for (var i=(ROWS-1); i>colcount[whichCol]; i--) {
+		    		tempLoc = FIRSTIMAGE + (ROWS - i) * COLS + whichCol
+					theAnim.addFrame( tempLoc, whosTurnSpot.src);
+					theAnim.addFrame( tempLoc, emptySpot.src);
+				}
+				theAnim.finalcall = "checkForWinner(" + whosTurn + ")";
+				theAnim.addFrame( placeLoc, whosTurnSpot.src);
+				
+				
+				colcount[whichCol] += 1;
+				if (whosTurn==RedNum) {
+					board[colcount[whichCol]-1][whichCol] = RedNum;
+				} else {
+					board[colcount[whichCol]-1][whichCol] = BlkNum;
+				}
+				
+			}
+		}
+	}
+}
+
+function whoGoesFirst() {
+	whosTurn = whosFirst;
+	switchTurns();
+	if (whosFirst == RedNum) {
+		whosFirst = BlkNum;
+	} else {
+		whosFirst = RedNum;
+	}
+}
+
+function switchTurns() {
+
+	if (gameActive == 1) {
+		if (whosTurn == RedNum) {
+			whosTurn = BlkNum;
+			whosTurnSpot.src = bluSpot.src;
+			whosTurnPiece.src = bluPiece.src;
+		} else {
+			whosTurn = RedNum;
+			whosTurnSpot.src = redSpot.src;
+			whosTurnPiece.src = redPiece.src;
+		}
+	
+		
+		isdropping = 0;
+
+	}
+}
+
+function AutoStart() {
+	
+	gameActive = 1;
+	rePlay();
+	
+	redScore = 0;
+	bluScore = 0;
+	
+	matchMade = 1;
+
+	bluIsComputer = 1;
+	whosFirst = RedNum;
+	
+	if (whosFirst == RedNum) {
+		whosTurn = BlkNum;
+		switchTurns();
+		whosFirst = RedNum;
+	} else {
+		whosTurn = RedNum;
+		switchTurns();
+		whosFirst = BlkNum;
+	}
+
+}
+
+
+function checkForWinner(player) {
+	if (gameActive == 1) {
+		var someOneWon;
+		someOneWon = 0;
+		if (player == RedNum) {
+			lookForSrc = redSpot.src;
+		}
+		if (player == BlkNum) {
+			lookForSrc = bluSpot.src;
+		}
+		for (var ic = 7; ic <= 48; ic++) {
+			if (document.images[FIRSTIMAGE + ic].src == lookForSrc) {
+				if ((ic + 3 <= 48
+				&& ic != 11 && ic != 12 && ic != 13
+				&& ic != 18 && ic != 19 && ic != 20
+				&& ic != 25 && ic != 26 && ic != 27
+				&& ic != 32 && ic != 33 && ic != 34
+				&& ic != 39 && ic != 40 && ic != 41
+				&& document.images[FIRSTIMAGE + ic + 1].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic + 2].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic + 3].src == lookForSrc)
+				|| (ic + 3 * 7 <= 48
+				&& document.images[FIRSTIMAGE + ic + 7].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic + 7*2].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic + 7*3].src == lookForSrc)
+				|| (ic + 3 * 7 <= 48
+				&& ic != 11 && ic != 12 && ic != 13
+				&& ic != 18 && ic != 19 && ic != 20
+				&& ic != 25 && ic != 26 && ic != 27
+				&& document.images[FIRSTIMAGE + ic + 7 + 1].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic + 7*2 + 2].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic + 7*3 + 3].src == lookForSrc)
+				|| (ic - 3 * 7 >= 7
+				&& ic != 32 && ic != 33 && ic != 34
+				&& ic != 39 && ic != 40 && ic != 41
+				&& ic != 46 && ic != 47 && ic != 48
+				&& document.images[FIRSTIMAGE + ic - 7 + 1].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic - 7*2 + 2].src == lookForSrc
+				&& document.images[FIRSTIMAGE + ic - 7*3 + 3].src == lookForSrc)) {
+					for (var col=0; col<COLS; col++) {
+						unPlaceTop(col);
+					}
+					if (player == RedNum) {
+						alert(redplayer + " wins. Click 'Reset Board' to start again");
+						redScore += 1;
+					} else if (player == BlkNum) {
+						alert(blkplayer + " wins. Click 'Reset Board' to start again");
+						bluScore += 1;
+					}
+					gameActive = 0;
+					someOneWon = 1;
+					ic = 49;
+				}
+			}
+		}
+		if (someOneWon != 1) {
+			colsFull = 0;
+			for (var col=0; col<COLS; col++) {
+				if (colcount[col]==ROWS) {
+					colsFull += 1;
+				}
+			}
+			if (colsFull==COLS) {
+				for (var col = 0; col<COLS; col++) {
+					unPlaceTop(col);
+				}
+				gameActive = 0;
+				alert("Board Full. Resetting the game");
+				newGame();
+					//debug("end");
+
+			}
+		}
+		
+		switchTurns();
+		isdropping = 0;
+
+		
+	}
+}
+
+function newGame() {
+	if (matchMade == 1) {
+		gameActive = 1;
+		isdropping = 0;
+		moves=0;
+		rePlay();
+		whoGoesFirst();
+		
+	}
+}
+
+
+function Animation() {
+  this.imageNum = new Array();  // Array of indicies document.images to be changed
+  this.imageSrc = new Array();  // Array of new srcs for imageNum array
+  this.frameIndex = 0;		  // the frame to play next
+  this.alreadyPlaying = false;  // semaphore to ensure we play smoothly
+ 	this.finalcall = ""; 		// what to call when animation finished
+ 	
+  // Methods
+  this.getFrameCount = getframecount;   // the total number of frames so far
+  this.moreFrames = moreframes;		 // tells us if there are more frames to play
+  this.addFrame = addframe;			 // add a frame to the animation
+  this.drawNextFrame = drawnextframe;   // draws the next frame
+  this.startAnimation = startanimation; // start the animation if necessary
+}
+
+function finalcall(FuncToCall) {
+	this.finalcall = FuncToCall;
+}
+
+function getframecount() {  return this.imageNum.length; }
+function moreframes() {  return this.frameIndex < this.getFrameCount(); }
+function startanimation() { 
+  if (!this.alreadyPlaying) {
+	theAnim.alreadyPlaying = true;
+	setTimeout('theAnim.drawNextFrame()',5); 
+  }
+}
+
+function addframe(num, src) {
+  var theIndex = theAnim.imageNum.length;
+  theAnim.imageSrc[theIndex] = src;
+  theAnim.imageNum[theIndex] = num;
+  theAnim.startAnimation();
+}
+
+function drawnextframe() {
+  if (theAnim.moreFrames()) {
+	document.images[ theAnim.imageNum[theAnim.frameIndex] ].src = theAnim.imageSrc[theAnim.frameIndex];
+	theAnim.frameIndex++;
+	setTimeout('theAnim.drawNextFrame()', 20);
+  } else {
+	theAnim.alreadyPlaying = false;
+		if (this.finalcall.length>0) {
+			setTimeout(this.finalcall,5);
+		}
+  }
+}
+
+
+
+</script>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+
+</head>
+
+<body style="">
+
+
+<center>
+<form name="formo" id="formo" >
+								<table border="0">
+				  					<tr> 
+										<td> 
+					  						<table border="0" width="271">
+												<tr> 
+						  							<td colspan="2" align="center"> 
+														<input type="button" name="reStartButton" value="Reset Board" onClick="newGame()" class="blacktext" />
+						  </td>
+												</tr>
+												<tr> 
+						  							<td> 
+														<table cellspacing="0" cellpadding="0" border="0" bgcolor="#311cbc">
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/clear.gif" height="70" width="70" /></a></td>
+															</tr>
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+															</tr>
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+															</tr>
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+															</tr>
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+															</tr>
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+															</tr>
+							  								<tr> 
+																<td><a href="javascript:void dropIt(0)" onMouseOver="placeTop(0)" onMouseOut="unPlaceTop(0)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(1)" onMouseOver="placeTop(1)" onMouseOut="unPlaceTop(1)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(2)" onMouseOver="placeTop(2)" onMouseOut="unPlaceTop(2)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(3)" onMouseOver="placeTop(3)" onMouseOut="unPlaceTop(3)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(4)" onMouseOver="placeTop(4)" onMouseOut="unPlaceTop(4)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(5)" onMouseOver="placeTop(5)" onMouseOut="unPlaceTop(5)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+																<td><a href="javascript:void dropIt(6)" onMouseOver="placeTop(6)" onMouseOut="unPlaceTop(6)"><img border="0" src="images/empty.gif" height="70" width="70" /></a></td>
+															</tr>
+														</table>
+													</td>
+												</tr>
+					  						</table>
+										</td>
+									</tr>
+								</table>
+							</form>
+						</center>
+
+<script language="JavaScript" type="text/javascript">AutoStart();</script>
+
+</body>
+</html>
